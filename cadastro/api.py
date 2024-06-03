@@ -1,5 +1,5 @@
 from django.http import HttpRequest
-from ninja import NinjaAPI, Schema
+from ninja import NinjaAPI, Schema, ModelSchema, UploadedFile
 from ninja.types import DictStrAny
 from .models import Livro
 from django.forms.models import model_to_dict
@@ -31,16 +31,24 @@ def listar_livro(request, id: int): # no swagger e obrigatorio colocar o numero 
 def lista_consulta(request, id: int=1): # no swagger já vem como padrão o primeiro id
     livro = get_object_or_404(Livro, id=id)
     return model_to_dict(livro)
-
-class livroShema(Schema): #Shema que vem da lib api-Ninja
+'''
+class livroShema(Schema):           #Shema que vem da lib api-Ninja
     titulo: str
     descricao: str
     autor: str = None
+'''    
+# Outra forma de trabalhar com Shcema usando o (modelShcema)
+class LivroSchema(ModelSchema):
+    class Config:
+        model = Livro
+        model_fields = "__all__"
 
-@api.post('livro') #requisicao do Tipo POST não tem /
-def livro_criar(request, livro: livroShema):
+@api.post('livro', response=LivroSchema) #requisicao do Tipo POST não tem /
+def livro_criar(request, livro: LivroSchema):
     l1 = livro.dict()
     livro = Livro(**l1) # o livro já e um dicionario, podemos usar no parametro **kwargs que trabalha com funções (dicionarios) 
     livro.save()
-    return 1
+    return livro
+
     
+
